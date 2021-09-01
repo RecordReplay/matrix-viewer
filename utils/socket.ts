@@ -1,4 +1,4 @@
-import { defer, makeInfallible } from "../utils/utils";
+import { defer, makeInfallible } from "./utils";
 import {
   ProtocolClient,
   EventMethods,
