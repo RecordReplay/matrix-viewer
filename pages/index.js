@@ -21,7 +21,7 @@ async function createEditor() {
       //   lineHeight: 40
       // },
 
-      lineNumbers: "off",
+      // lineNumbers: "off",
       roundedSelection: false,
       scrollBeyondLastLine: false,
       readOnly: true,
@@ -52,11 +52,11 @@ export default function Home() {
         editor.setValue(contents)
       })
 
-      const hits = await replay.getHits(
+      const {points} = await replay.getHits(
         {sourceId: "o15", line: 8, column: 0}
       )
-      console.log({hits})
-      replay.fetchPaints()
+
+      replay.playHits(points)
     })()
 
 

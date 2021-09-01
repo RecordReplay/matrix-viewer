@@ -1,3 +1,5 @@
+import { PaintsManager } from "./paints-manager";
+
 const isServer = () => typeof window === 'undefined';
 let gPaints
 
@@ -9,16 +11,21 @@ export class Replay {
   client;
   socket;
   sessionId;
+  paintsManager;
 
   sendMessage(command, params) {
     return this.socket.sendMessage(command, params, this.sessionId)
   }
 
   async init(recordingId) {
-    await this.createSession(recordingId);
+    const sessionId = await this.createSession(recordingId);
+    if (!sessionId) {
+      return;
+    }
+    this.paintsManager = new PaintsManager(this.client, sessionId)
 
     this.client.Debugger.addNewSourceListener(source => {})
-    this.sendMessage("Debugger.findSources", {});
+    await this.sendMessage("Debugger.findSources", {});
   }
 
 
@@ -38,7 +45,7 @@ export class Replay {
     this.client = socket.client
     this.socket = socket;
 
-    return {sessionId, socket}
+    return sessionId;
   }
 
 
@@ -76,29 +83,30 @@ export class Replay {
 
 
   async fetchPaints() {
-    this.socket.addEventListener("Graphics.paintPoints", async ({paints}) => {
-      console.log({paints})
-      gPaints = paints
+    // this.socket.addEventListener("Graphics.paintPoints", async ({paints}) => {
+    //   console.log({paints})
 
-      let count = 0;
-      let int = setInterval(async () => {
-        const point = paints[count++]?.point
-        if (!point) {
-          clearInterval(int)
-          return
-        }
-        console.log(count)
-        const { screen } = await this.sendMessage(
-          "Graphics.getPaintContents",
-          {point, mimeType: "image/jpeg", resizeHeight: undefined},
-        )
+    //   let count = 0;
+    //   let int = setInterval(async () => {
+    //     const paint = paints[count++]
+    //     if (!paint) {
+    //       clearInterval(int)
+    //       return
+    //     }
+    //     console.log(count)
+    //     const {screen} = await this.paintsManager.getGraphicsAtTime()
 
-        this.refreshGraphics(screen)
+    //     // const { screen } = await this.sendMessage(
+    //     //   "Graphics.getPaintContents",
+    //     //   {point, mimeType: "image/jpeg", resizeHeight: undefined},
+    //     // )
 
-      }, 200)
-    })
+    //     this.refreshGraphics(screen)
 
-    await this.sendMessage("Graphics.findPaints",{});
+    //   }, 200)
+    // })
+
+    // await this.sendMessage("Graphics.findPaints",{});
   }
 
   async refreshGraphics(screenShot){
@@ -119,27 +127,42 @@ export class Replay {
     image.src = `data:${screenShot.mimeType};base64,${screenShot.data}`;
   }
 
-  async getHits(location) {
-    const { analysisId } = await this.sendMessage(
-      "Analysis.createAnalysis",
-      {
-        mapper: `
-        const { point, time, pauseId } = input;
-        return [{
-          key: point,
-          value: input,
-        }];
-        `,
-        effectful: false,
-      }
-    );
-  
-    this.socket.addEventListener("Analysis.analysisPoints", (points) => {
-      console.log({points})
-    });
+  async playHits(points) {
+    let count = 0
+    setInterval(async () => {
+      const point = points[count++]
+      if (!point) return;
+      const {time} = point;
+      const {screen} = await this.paintsManager.getGraphicsAtTime(time)
+      this.refreshGraphics(screen)
+    }, 200)
+  }
 
-    await this.sendMessage("Analysis.addLocation", { analysisId, location })
-    this.sendMessage("Analysis.findAnalysisPoints", { analysisId });
+  async getHits(location) {
+    return new Promise(async (resolve) => {
+      const { analysisId } = await this.sendMessage(
+        "Analysis.createAnalysis",
+        {
+          mapper: `
+          const { point, time, pauseId } = input;
+          return [{
+            key: point,
+            value: input,
+          }];
+          `,
+          effectful: false,
+        }
+      );
+
+      this.socket.addEventListener("Analysis.analysisPoints", (points) => {
+        console.log({points})
+        resolve(points)
+      });
+
+      await this.sendMessage("Debugger.getPossibleBreakpoints", {sourceId: location.sourceId})
+      await this.sendMessage("Analysis.addLocation", { analysisId, location })
+      this.sendMessage("Analysis.findAnalysisPoints", { analysisId });
+    })
   }
 
 }

@@ -38,11 +38,11 @@ let gSentBytes = 0;
 let gReceivedBytes = 0;
 
 let willClose = false;
-window.addEventListener("beforeunload", () => {
-  willClose = true;
-});
 
 export function initSocket() {
+  window.addEventListener("beforeunload", () => {
+    willClose = true;
+  });
   socket = new WebSocket("wss://dispatch.replay.io");
 
   socket.onopen = makeInfallible(onSocketOpen);
