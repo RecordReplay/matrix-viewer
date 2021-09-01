@@ -14,3 +14,17 @@ a {
 * {
   box-sizing: border-box;
 }
+
+main {
+  display: flex;
+  flex-direction: row;
+}
+main #editor {
+  width: 500px;
+  height: 400px;
+}
+
+main #graphics {
+  width: 500px;
+  height: 400px;
+}
