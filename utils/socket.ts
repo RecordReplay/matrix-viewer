@@ -1,3 +1,7 @@
+/*
+  Basic interface for interacting with the Replay dispatcher.
+*/
+
 import { defer, makeInfallible } from "./utils";
 import {
   ProtocolClient,
@@ -39,6 +43,9 @@ let gReceivedBytes = 0;
 
 let willClose = false;
 
+/**
+ * Initializes the web socket. Must be called first.
+ */
 export function initSocket() {
   window.addEventListener("beforeunload", () => {
     willClose = true;
@@ -51,6 +58,9 @@ export function initSocket() {
   socket.onmessage = makeInfallible(onSocketMessage);
 }
 
+/**
+ * Sends a command to the dispatcher and returns a promise with the result
+ */
 export function sendMessage<M extends CommandMethods>(
   method: M,
   params: CommandParams<M>,
