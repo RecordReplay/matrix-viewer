@@ -11,9 +11,9 @@ The UI is [React](https://reactjs.org/) app using [Next.js](https://nextjs.org/)
 First, run the development server:
 
 ```bash
-npm run dev
+npm install && npm run dev
 # or
-yarn dev
+yarn && yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
