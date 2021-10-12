@@ -1,10 +1,10 @@
 import Head from 'next/head'
 import loader from "@monaco-editor/loader";
 import { useEffect } from 'react';
-const recordingId = "31ce0f68-59e3-46a2-ab38-7781b0db83a6";// "41466cc2-0572-4959-be1d-d2dbd91460ac"
 import {Replay} from "../utils/replay"
-// https://glitch.com/edit/#!/draw-matrix?path=script.js%3A1%3A0
 
+// Recording of https://hl9yc.sse.codesandbox.io/
+const recordingId = "31ce0f68-59e3-46a2-ab38-7781b0db83a6";
 
 async function createEditor() {
   loader.init().then((monaco) => {
@@ -48,7 +48,9 @@ export default function Home() {
     (async () => {
       const replay = new Replay()
       await replay.init(recordingId)
+      // TODO: Where did o15 come from?
       replay.fetchContents("o15").then(contents => {
+        // TODO: Can editor be undefined here?
         editor.setValue(contents)
       })
 

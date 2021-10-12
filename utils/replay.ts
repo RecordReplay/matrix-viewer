@@ -1,3 +1,9 @@
+/*
+  A simple client for the Replay protocol
+
+  https://static.replay.io/protocol/
+*/
+
 import { PaintsManager } from "./paints-manager";
 
 const isServer = () => typeof window === 'undefined';
@@ -36,7 +42,7 @@ export class Replay {
     const socket = await import("./socket")
     socket.initSocket()
 
-
+    // https://static.replay.io/protocol/tot/Recording/#method-createSession
     const { sessionId } = await socket.sendMessage("Recording.createSession", {
       recordingId,
     })
@@ -140,6 +146,7 @@ export class Replay {
 
   async getHits(location) {
     return new Promise(async (resolve) => {
+      // https://static.replay.io/protocol/tot/Analysis/#method-createAnalysis
       const { analysisId } = await this.sendMessage(
         "Analysis.createAnalysis",
         {
